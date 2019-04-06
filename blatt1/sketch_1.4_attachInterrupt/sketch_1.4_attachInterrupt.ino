@@ -8,9 +8,9 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(7, pin_state);
 }
 
 void blink() {
   pin_state = !pin_state;
+  digitalWrite(7, pin_state);
 }
