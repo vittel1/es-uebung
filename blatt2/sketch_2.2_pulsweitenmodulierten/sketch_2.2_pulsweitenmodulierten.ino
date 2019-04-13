@@ -20,7 +20,6 @@ void brightnessUp(void)
     }
     if(count == 30)
     {
-      //led_state = !led_state;
       brightness += 50;
       if(brightness > 255) 
       {
@@ -79,7 +78,6 @@ void restartRightPin()
 
 void setup()
 {
-  // Konfiguration der Richtung des digitalen I/O Anschlusspins 13
   pinMode(led_pin, OUTPUT);
   pinMode(5, INPUT);
   pinMode(3, INPUT);
@@ -95,6 +93,5 @@ void setup()
 
 void loop()
 {
-  // Wechsel des Logikpegels am Ausgangspin 7
   analogWrite(led_pin, brightness);
 }

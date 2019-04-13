@@ -2,6 +2,8 @@
 
 auto led_pin = 7;
 volatile auto led_state = LOW;
+
+//Standardsignal des Buttons
 int button_state = HIGH;
 DueTimer timer;
 
@@ -11,18 +13,27 @@ int count = 0;
 void changeLedState(void)
 {
   int val = digitalRead(5);
+  
+  //wenn der Taster betätigt wurde, wird if-Statement betreten
   if(val != button_state)
   {
+    //wenn der momentane Zustand und der vorherige übereinstimmen, zähle den counter hoch
     if(previous_state == val) 
     {
       count++;
     }
+
+    //wenn state über 30 ms gleichgeblieben ist, wird davon ausgegangen, dass
+    //das Signal nun konstant bleibt und die gewünschte Aktion wird ausgeführt und
+    //der Timer wird angehalten, bis der Knopf erneut gedrückt wird (siehe interrupt)
     if(count == 30)
     {
       led_state = !led_state;
       count = 0; 
       timer.stop();
     }
+
+    //falls der momentane Zustand und der vorherige nicht übereinstimmen, prellt der Taster noch
     if(previous_state != val)
     {
       count = 0;
@@ -38,7 +49,6 @@ void restart()
 
 void setup()
 {
-  // Konfiguration der Richtung des digitalen I/O Anschlusspins 13
   pinMode(led_pin, OUTPUT);
   pinMode(5, INPUT);
   // Konfiguration des Hardware-Timers (@ 1 Hz)
@@ -52,6 +62,5 @@ void setup()
 
 void loop()
 {
-  // Wechsel des Logikpegels am Ausgangspin 13
   digitalWrite(led_pin, led_state);
 }
