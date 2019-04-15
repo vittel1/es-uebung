@@ -22,6 +22,11 @@ void changeLedState(void)
     {
       count++;
     }
+    //falls der momentane Zustand und der vorherige nicht übereinstimmen, prellt der Taster noch
+    else
+    {
+      count = 0;
+    }
 
     //wenn state über 30 ms gleichgeblieben ist, wird davon ausgegangen, dass
     //das Signal nun konstant bleibt und die gewünschte Aktion wird ausgeführt und
@@ -31,12 +36,6 @@ void changeLedState(void)
       led_state = !led_state;
       count = 0; 
       timer.stop();
-    }
-
-    //falls der momentane Zustand und der vorherige nicht übereinstimmen, prellt der Taster noch
-    if(previous_state != val)
-    {
-      count = 0;
     }
     previous_state = val;
   }
