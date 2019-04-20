@@ -9,7 +9,7 @@ void testString(char testValue[]) {
   regex_t regex;
   int reti;
 
-  reti = regcomp(&regex, "^setRGB\\([[:digit:]].[[:digit:]]\\, [[:space:][:digit:]].[[:digit:]]\\, [[:space:][:digit:]].[[:digit:]]\\)", REG_EXTENDED);
+  reti = regcomp(&regex, "^setRGB\\([[:digit:]]\\.[[:digit:]]\\, [[:space:][:digit:]]\\.[[:digit:]]\\, [[:space:][:digit:]]\\.[[:digit:]]\\)", REG_EXTENDED);
   if (reti) {
     fprintf(stderr, "Could not compile regex\n");
   }
@@ -30,6 +30,9 @@ int main() {
   testString("setRGB(1.0,0.0,0.0)"); //WRONG
   testString("setRGB(1.0, 0.0,     0.0)"); //WRONG
   testString("setRGB(10.0, 0.09999, 123123.0)"); //WRONG
+  testString("setRGB(1.0, 6.01, 5.05)"); //WRONG
+  testString("setRGB(1.0, 6,0, 5,0)"); //WRONG
+  testString("setRGB(0.0, 0.0, 1.0"); //WRONG
   testString("setRGB(0.0, 0.0, 1.0)"); //CORRECT
   testString("setRGB(1.0, 5.0, 9.0)"); //CORRECT
 
