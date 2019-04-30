@@ -1,0 +1,27 @@
+//previous_state deklarieren!!
+void NAMEEINFUEGEN(void)
+{
+  int val = digitalRead(RICHTIGEZAHL);
+  
+  if(val != button_state)
+  {
+    if(previous_state == val) 
+    {
+      count++;
+    }
+
+
+    if(count == 30)
+    {
+      hier die gewünschte Funktion
+      count = 0; 
+      timer.stop();
+    }
+
+    if(previous_state != val)
+    {
+      count = 0;
+    }
+    previous_state = val;
+  }
+}
