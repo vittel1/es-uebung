@@ -1,8 +1,3 @@
-/*TODO
- * Leerzeichen setRGB
- */
-
-
 double red = 0.0;
 double green = 0.0;
 double blue = 0.0;
@@ -10,12 +5,10 @@ double blue = 0.0;
 int redPin = 7;
 int greenPin = 5;
 int bluePin = 3;
+int an = 0; //0 wenn aus
 
 
-void setup() {
-
-  //VERBINDUNG ZUR ANODE MACHEN
-  
+void setup() {  
   pinMode(redPin,OUTPUT);
   pinMode(greenPin,OUTPUT);
   pinMode(bluePin,OUTPUT);
@@ -27,48 +20,43 @@ void setup() {
 
 void loop() {
   while (Serial.available() > 0) {
-    //const char* test = "hallo";
     String input = Serial.readString();
     checkInput(input);
   }
 }
 
 boolean checkInput(String input) {
-  //Korrektheit prüfen, siehe Aufgabe verschiedenen Fälle
-  /*
-  switch(input) {
-    case input.substring(0, 7) == "setRGB(":
-      setColors(input);
-      break;
-    case input.substring(0, 7) == "RGBon()":
-      turnOn();
-      break;
-    case input.substring(0, 8) == "RGBoff()":
-      turnOff();
-      break;
-    default:
-      Serial.print("Fehler bei der Eingabe!");
+  if(input.length() > 20){
+    Serial.println("Kein gültiger Befehl (Leerzeichen?)");
   }
-  */
-  if(input.substring(0, 7) == "setRGB(" && input.charAt(18)==")") {
-    setColor(input);
+  else if(input.substring(0, 7) == "setRGB(" ) {
+    //keine Kommas anstatt Punkten
+    if(input.substring(8,9) == "," || input.substring(12,13) == "," || input.substring(16,17) == ","){
+      Serial.println("Zahlenformat nicht richtig");
+    }
+    else if(input.length() < 20){
+      Serial.println("Zu wenige Parameter (3 gefordert)");
+    }
+    else{
+      setColor(input);
+    }
   }
-  else if(input == "RGBon()"){
+  else if(input.substring(0,7) == "RGBon()"){
+    Serial.println();
     turnOn();
   }
-  else if(input =="RGBoff()"){
+  else if(input.substring(0,8) == "RGBoff()"){
     turnOff();
   }
   else{
+    Serial.print("Eingabe: ");
+    Serial.println(input);
     Serial.println("Kein gültiger Befehl");
   }
   
 }
 
 void setColor(String input) {
-  //red 7-10
-  //green 11-14
-  //blue 15-18
   //setRGB(0.1,0.2,0.3)
   double tempRed = input.substring(7,10).toDouble();
   double tempGreen = input.substring(11,14).toDouble();
@@ -89,12 +77,17 @@ void setColor(String input) {
     red = tempRed;
     green = tempGreen;
     blue = tempBlue;
-    Serial.println("Red: ");
-    Serial.print(red);
-    Serial.println("Green: ");
-    Serial.print(green);
-    Serial.println("Blue: ");
-    Serial.print(blue);  
+    Serial.print("Red: ");
+    Serial.println(red);
+    Serial.print("Green: ");
+    Serial.println(green);
+    Serial.print("Blue: ");
+    Serial.println(blue);
+    if(an == 1){
+      analogWrite(redPin, red*255);
+      analogWrite(greenPin, green*255);
+      analogWrite(bluePin, blue*255);      
+    }
   }
   
 }
@@ -103,10 +96,14 @@ void turnOn() {
   analogWrite(redPin, red*255);
   analogWrite(greenPin, green*255);
   analogWrite(bluePin, blue*255);
+  Serial.println("LED an");
+  an = 1;
 }
 
 void turnOff() {
   analogWrite(redPin, 255);
   analogWrite(greenPin, 255);
   analogWrite(bluePin, 255);
+  Serial.println("LED aus");
+  an = 0;
 }

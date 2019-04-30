@@ -76,9 +76,10 @@ void setColor(std::string input) {
   //double tempRed = input.substr(7,10).toDouble();
   //double tempGreen = input.substr(11,14).toDouble();
   //double tempBlue = input.substr(15,18).toDouble();
-  float tempRed = std::stof(input.substr(7, 3));
-  float tempGreen = std::stof(input.substr(11, 3));
-  float tempBlue = std::stof(input.substr(15, 3));
+  //std::stod
+  double tempRed = atof(input.substr(7, 3).c_str());
+  double tempGreen = atof(input.substr(11, 3).c_str());
+  double tempBlue = atof(input.substr(15, 3).c_str());
   double colors[] = {tempRed, tempGreen, tempBlue};
   int check = 1;
   for (int i = 0; i < 3; i++)
