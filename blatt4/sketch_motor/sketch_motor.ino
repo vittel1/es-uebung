@@ -12,6 +12,7 @@ DueTimer timerLinks;
 DueTimer timerRechts;
 
 
+
 int buttonStateLeft = HIGH;
 int buttonStateRight = HIGH;
 
@@ -25,6 +26,7 @@ int StandBy = HIGH;
 int currentMode = 0; //0 für Geschwindigkeit, 1 für Richtung
 
 int currentSpeed = 100;
+String turning = "CCW";
 
 void speedDown(void)
 {
@@ -47,8 +49,17 @@ void speedDown(void)
         countLeft = 0;
         countRight = 0;
         currentMode = !currentMode;
-        Serial.println("currentMode geändert");
-        Serial.println(currentMode);
+        Serial.print("Modus geändert, jetzt wird ");
+        if(currentMode == 1)
+        {
+          Serial.print("Richtung ");  
+        }
+        else
+        {
+          Serial.print("Geschwindigkeit "
+        }
+        Serial.println("eingestellt");
+        
         return;
       }
       if(currentMode == 0)
@@ -62,8 +73,9 @@ void speedDown(void)
         {
           currentSpeed = currentSpeed - 25;
         }
-        Serial.println("currentSpeed verändert");
-        Serial.println(currentSpeed);
+        //Serial.println("currentSpeed verändert");
+        //Serial.println(currentSpeed);
+        printFormattedString();
         analogWrite(bridgePWM, currentSpeed);
       }
       else
@@ -76,6 +88,8 @@ void speedDown(void)
           digitalWrite(bridgeIn2, LOW);
           analogWrite(bridgePWM, 0);
           Serial.println("drehrichtung anders");
+          turning = "CW";
+          printFormattedString();
         }
         else
         {
@@ -83,6 +97,7 @@ void speedDown(void)
           {
             analogWrite(bridgePWM, currentSpeed); 
             Serial.println("jetzt drehen"); 
+            printFormattedString();
           }
           else
           {
@@ -125,8 +140,16 @@ void speedUp(void)
         countLeft = 0;
         countRight = 0;
         currentMode = !currentMode;
-        Serial.println("currentMode geändert");
-        Serial.println(currentMode);
+        Serial.print("Modus geändert, jetzt wird ");
+        if(currentMode == 1)
+        {
+          Serial.print("Richtung ");  
+        }
+        else
+        {
+          Serial.print("Geschwindigkeit "
+        }
+        Serial.println("eingestellt");
         return;
       }
       if(currentMode == 0)
@@ -139,8 +162,9 @@ void speedUp(void)
         {
           currentSpeed = currentSpeed + 25;
         }
-        Serial.println("currentSpeed verändert");
-        Serial.println(currentSpeed);
+        //Serial.println("currentSpeed verändert");
+        //Serial.println(currentSpeed);
+        printFormattedString();
         analogWrite(bridgePWM, currentSpeed);
       }
       else
@@ -153,6 +177,8 @@ void speedUp(void)
           digitalWrite(bridgeIn2, HIGH);
           analogWrite(bridgePWM, 0);
           Serial.println("drehrichtung anders");
+          turning = "CCW";
+          printFormattedString();
         }
         else
         {
@@ -160,7 +186,9 @@ void speedUp(void)
           {
             analogWrite(bridgePWM, currentSpeed);
             Serial.println(analogRead(bridgePWM));
-            Serial.println("jetzt drehen");  
+            Serial.println("jetzt drehen"); 
+            turning = "CCW";
+            printFormattedString(); 
           }
           else
           {
@@ -194,6 +222,15 @@ void rightButtonPressed()
   timerRechts.configure(1000, speedDown);
 }
 
+
+void printFormattedString()
+{
+  Serial.print("Momentane Geschwindigkeit: ")
+  Serial.print(currentSpeed);
+  Serial.println("/255");
+  Serial.print("Drehrichtung: ");
+  Serial.println(turning);
+}
 
 
 void setup() {
