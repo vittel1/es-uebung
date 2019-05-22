@@ -26,6 +26,7 @@ int StandBy = HIGH;
 int currentMode = 0; //0 für Geschwindigkeit, 1 für Richtung
 
 int currentSpeed = 100;
+int previousSpeed = 100;
 String turning = "CCW";
 
 void speedDown(void)
@@ -40,9 +41,9 @@ void speedDown(void)
     }
 
 
-    if(countRight == 100)
+    if(countRight == 10)
     {
-      if(countLeft > 25)
+      if(countLeft > 3)
       {
         timerLinks.stop();
         timerRechts.stop();
@@ -56,7 +57,7 @@ void speedDown(void)
         }
         else
         {
-          Serial.print("Geschwindigkeit "
+          Serial.print("Geschwindigkeit ");
         }
         Serial.println("eingestellt");
         
@@ -68,10 +69,12 @@ void speedDown(void)
         if(currentSpeed - 25 < 0)
         {
           currentSpeed = 0;
+          previousSpeed = 0;
         }
         else
         {
           currentSpeed = currentSpeed - 25;
+          previousSpeed = currentSpeed;
         }
         //Serial.println("currentSpeed verändert");
         //Serial.println(currentSpeed);
@@ -93,15 +96,17 @@ void speedDown(void)
         }
         else
         {
-          if(analogRead(bridgePWM) == 0)
+          if(currentSpeed == 0)
           {
-            analogWrite(bridgePWM, currentSpeed); 
+            analogWrite(bridgePWM, previousSpeed);
+            currentSpeed = previousSpeed;
             Serial.println("jetzt drehen"); 
             printFormattedString();
           }
           else
           {
-            analogWrite(bridgePWM, 0);
+            currentSpeed = 0;
+            analogWrite(bridgePWM, currentSpeed);
             Serial.println("jetzt nicht");
           }
           
@@ -131,9 +136,9 @@ void speedUp(void)
     }
 
 
-    if(countLeft == 100)
+    if(countLeft == 10)
     {
-      if(countRight > 25)
+      if(countRight > 3)
       {
         timerLinks.stop();
         timerRechts.stop();
@@ -147,7 +152,7 @@ void speedUp(void)
         }
         else
         {
-          Serial.print("Geschwindigkeit "
+          Serial.print("Geschwindigkeit ");
         }
         Serial.println("eingestellt");
         return;
@@ -157,10 +162,12 @@ void speedUp(void)
         if(currentSpeed + 25 > 255)
         {
           currentSpeed = 255;
+          previousSpeed = currentSpeed;
         }
         else
         {
           currentSpeed = currentSpeed + 25;
+          previousSpeed = currentSpeed;
         }
         //Serial.println("currentSpeed verändert");
         //Serial.println(currentSpeed);
@@ -182,18 +189,19 @@ void speedUp(void)
         }
         else
         {
-          if(analogRead(bridgePWM) == 0)
+          
+          if(currentSpeed == 0)
           {
-            analogWrite(bridgePWM, currentSpeed);
-            Serial.println(analogRead(bridgePWM));
+            analogWrite(bridgePWM, previousSpeed);
+            currentSpeed = previousSpeed;
             Serial.println("jetzt drehen"); 
             turning = "CCW";
             printFormattedString(); 
           }
           else
           {
-            analogWrite(bridgePWM, 0);
-            Serial.println(analogRead(bridgePWM));
+            currentSpeed = 0;
+            analogWrite(bridgePWM, currentSpeed);
             Serial.println("jetzt nicht");
           }
         }
@@ -213,19 +221,19 @@ void speedUp(void)
 void leftButtonPressed()
 {
   timerLinks.start();
-  timerLinks.configure(1000, speedUp);
+  timerLinks.configure(100, speedUp);
 }
 
 void rightButtonPressed()
 {
   timerRechts.start();
-  timerRechts.configure(1000, speedDown);
+  timerRechts.configure(100, speedDown);
 }
 
 
 void printFormattedString()
 {
-  Serial.print("Momentane Geschwindigkeit: ")
+  Serial.print("Momentane Geschwindigkeit: ");
   Serial.print(currentSpeed);
   Serial.println("/255");
   Serial.print("Drehrichtung: ");
@@ -234,7 +242,7 @@ void printFormattedString()
 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   pinMode(redPin,OUTPUT);
   pinMode(greenPin,OUTPUT);
   pinMode(bluePin,OUTPUT);
