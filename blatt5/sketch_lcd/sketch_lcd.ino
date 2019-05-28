@@ -265,6 +265,76 @@ void printChar()
   
 }
 
+
+int printChar(int x, int y, char value, uint16_t fgColor, uint16_t bgColor)
+{
+  if(x + 8 > LAST_COL || y + 6 > LAST_ROW)
+  {
+    return -1; 
+  }
+  
+  uint16_t mask = 0x01;
+  int xPos = x;
+  int yPos = y;
+  
+  for(int j = 0; j < 6; j++)
+  {
+    for (int i = 0; i < 8; i++)
+    {
+      if((font[value - 32][j] & mask) != 0)
+      {
+        setPixel(xPos, yPos, fgColor);
+      }
+      else
+      {
+        setPixel(xPos, yPos, bgColor);
+      }
+      yPos++;
+      mask = mask << 1;
+    }
+
+    xPos++;
+    yPos = y;
+    mask = 0x01;  
+  }
+  return 1;
+}
+
+int printString(int x, int y, char* c_str, uint16_t fgColor, uint16_t bgColor)
+{
+  int lengthStr = strlen(c_str);
+  //if(x + lengthStr * 6 > LAST_COL || y + 8 > LAST_ROW)
+  //{
+  //  return -1;
+  //}
+  for(int i = 0; i < lengthStr; i++)
+  {
+    int val = printChar(x + i*6, y, c_str[i], fgColor, bgColor);
+    if(val == -1)
+    {
+      return -1;
+    }
+  }
+  return 1;
+}
+
+void runStudentIdDemo()
+{
+  char* marcel = "Name Name";
+  char* niclas = "Auch Auch";
+  char* matrikelMarcel = "4444444";
+  char* matrikelNiclas = "8888888";
+  printString(10, 10, marcel, 0x0000, 0xFFFF);
+  printString(10, 25, matrikelMarcel, 0x0000, 0xFFFF);
+  delay(5000);
+  printString(10, 10, niclas, 0x0000, 0xFFFF);
+  printString(10, 25, matrikelNiclas, 0x0000, 0xFFFF);
+  delay(5000);
+  
+  
+}
+
+
 void setup() {
     // set pin-modes
   pinMode(TFT_RST, OUTPUT);
@@ -311,10 +381,9 @@ void setup() {
     SPI.endTransaction();
   time = millis() - time;
   Serial.print("time consumption of clear-display: "); Serial.print(time, DEC); Serial.println(" ms");
-  printChar();
 }
 
 void loop() {
-  
-
+  runStudentIdDemo();
+  //printChar();
 }
