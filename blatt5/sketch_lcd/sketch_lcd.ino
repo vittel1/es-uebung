@@ -1,6 +1,8 @@
 #include <SPI.h>
 #include <SD.h>
+#include <DueTimer.h>
 
+DueTimer timer;
  
 //pin declarations
 #define TFT_CS     10   //display: CS-pin
@@ -46,6 +48,13 @@ const uint8_t PWCTR4 = 0xC3;            //Power Control 4
 const uint8_t PWCTR5 = 0xC4;            //Power Control 5
 const uint8_t VMCTR1 = 0xC5;            //VCOM Voltage setting
 
+//uint16_t buf[LAST_ROW*LAST_COL] = {};
+
+uint16_t bgCol = 0xFFFF;
+
+uint16_t colArray[10] = {
+  0x18C3, 0x3186, 0x4A69, 0x632C, 0x7BEF, 0x9CD3, 0xB596, 0xCE79, 0xE73C, 0xFFFF
+};
 
 unsigned char font[95][6] =
 {
@@ -100,7 +109,7 @@ unsigned char font[95][6] =
 { 0x7F, 0x09, 0x09, 0x09, 0x06, 0x00 }, // P
 { 0x3E, 0x41, 0x51, 0x21, 0x5E, 0x00 }, // Q
 { 0x7F, 0x09, 0x19, 0x29, 0x46, 0x00 }, // R
-{ 0x26, 0x49, 0x49, 0x49, 0x32, 0x00 }, // S
+{ 0x26, 0x49, 0x49, 0x49, 0x32, 0x00 }, // SsetContrast(0.2)
 { 0x01, 0x01, 0x7F, 0x01, 0x01, 0x00 }, // T
 { 0x3F, 0x40, 0x40, 0x40, 0x3F, 0x00 }, // U
 { 0x1F, 0x20, 0x40, 0x20, 0x1F, 0x00 }, // V
@@ -234,6 +243,7 @@ void drawColumns(uint16_t color)
   
 }
 
+
 void printChar()
 {
   uint16_t mask = 0x01;
@@ -243,17 +253,9 @@ void printChar()
   {
     for(int i = 0; i < 8; i++)
     {
-      Serial.println(font[11][j], HEX);
-      Serial.print("Test: ");
-      Serial.println(font[11][j] & mask);
-      Serial.print("Maske: ");
-      Serial.println(mask);
-      Serial.print("Ergebnis: ");
-      Serial.println((font[11][j] & mask) != mask);
       if((font[11][j] & mask) != 0)
       {
         setPixel(xPos, yPos, 0x0000);
-        Serial.println("da");
       }
       yPos++;
       mask = mask << 1;
@@ -273,6 +275,7 @@ int printChar(int x, int y, char value, uint16_t fgColor, uint16_t bgColor)
     return -1; 
   }
   
+  
   uint16_t mask = 0x01;
   int xPos = x;
   int yPos = y;
@@ -284,10 +287,12 @@ int printChar(int x, int y, char value, uint16_t fgColor, uint16_t bgColor)
       if((font[value - 32][j] & mask) != 0)
       {
         setPixel(xPos, yPos, fgColor);
+        //addToBuffer(xPos, yPos, fgColor);
       }
       else
       {
         setPixel(xPos, yPos, bgColor);
+        //addToBuffer(xPos, yPos, bgColor);
       }
       yPos++;
       mask = mask << 1;
@@ -303,10 +308,7 @@ int printChar(int x, int y, char value, uint16_t fgColor, uint16_t bgColor)
 int printString(int x, int y, char* c_str, uint16_t fgColor, uint16_t bgColor)
 {
   int lengthStr = strlen(c_str);
-  //if(x + lengthStr * 6 > LAST_COL || y + 8 > LAST_ROW)
-  //{
-  //  return -1;
-  //}
+  
   for(int i = 0; i < lengthStr; i++)
   {
     int val = printChar(x + i*6, y, c_str[i], fgColor, bgColor);
@@ -318,21 +320,176 @@ int printString(int x, int y, char* c_str, uint16_t fgColor, uint16_t bgColor)
   return 1;
 }
 
+void timerStudent()
+{
+  timer.configure(1, runStudentIdDemo);
+  timer.start();
+}
+
+int statusId = 0;
 void runStudentIdDemo()
 {
   char* marcel = "Name Name";
   char* niclas = "Auch Auch";
   char* matrikelMarcel = "4444444";
   char* matrikelNiclas = "8888888";
-  printString(10, 10, marcel, 0x0000, 0xFFFF);
-  printString(10, 25, matrikelMarcel, 0x0000, 0xFFFF);
-  delay(5000);
-  printString(10, 10, niclas, 0x0000, 0xFFFF);
-  printString(10, 25, matrikelNiclas, 0x0000, 0xFFFF);
-  delay(5000);
+  if(statusId == 0)
+  {
+    printString(10, 10, marcel, 0x0000, bgCol);
+  printString(10, 25, matrikelMarcel, 0x0000, bgCol);
+
+  }
   
+  //sendToDisplay();
+  //delay(5000);
+ else
+ {
+  printString(10, 10, niclas, 0x0000, bgCol);
+  printString(10, 25, matrikelNiclas, 0x0000, bgCol);
+ }
+  statusId = (statusId + 1 )% 2;
+  //sendToDisplay();
+ // delay(5000);
+}
+
+
+
+void help() {
+  Serial.println("stopDemo(): Stoppt den Hardware-Timer und somit die Ausführung beider zuvor definierten Demos.");
+  Serial.println("clearDisplay(): Löscht den Pufferspeicher und aktualisiert die Darstellung des LC-Displays.");
+  Serial.println("runRotatingBarDemo(): eine Funktion, die auf dem Display (zentriert) einen sich rotierenden Balken produziert.");
+  Serial.println("runStudentIdDemo():  Funktion zur abwechselnden Darstellung der Daten aller Teilnehmer der Gruppe. Wechselt die Daten alle 5 Sekunden aus.");
+  Serial.println("setContrast(<value>): Funktion zur Einstellung des Kontrastes des LC-Displays. 〈value〉 hat einen Wertebereich von 0.0 - 1.0.");
+}
+
+void stopDemo() {
+  timer.stop();
+}
+
+void clearDisplay() {
+  for(int j = FIRST_COL; j <= LAST_COL; j++)
+  {
+    for(int i = FIRST_ROW; i <= LAST_ROW; i++)
+    {
+      setPixel(j, i, 0xFFFF);
+    }
+  }
   
 }
+
+void runRotatingBarDemo() {
+  timer.configure(10, nextBar);
+  timer.start();  
+}
+
+int status = 0;
+void nextBar()
+{
+ // while(status < 20){
+  if(status%4 == 0)
+  {
+    
+    printChar(LAST_COL / 2 -8, LAST_ROW / 2 -8, '\\', 0x0000, 0xFFFF);
+  printChar(LAST_COL / 2, LAST_ROW / 2, '\\', 0x0000, 0xFFFF);
+  printChar(LAST_COL / 2 + 8, LAST_ROW / 2 + 8, '\\', 0x0000, 0xFFFF);
+  timer.start();
+  clearDisplay();
+  }
+  else if(status%4 == 1)
+  {
+
+     printChar(LAST_COL / 2, LAST_ROW / 2 -8, 'I', 0x0000, 0xFFFF);
+  printChar(LAST_COL / 2, LAST_ROW / 2, 'I', 0x0000, 0xFFFF);
+  printChar(LAST_COL / 2, LAST_ROW / 2 +8, 'I', 0x0000, 0xFFFF); 
+  timer.start();
+  clearDisplay();
+  }
+  else if(status % 4 == 2)
+  {
+
+    printChar(LAST_COL / 2 +8, LAST_ROW / 2 -8, '/', 0x0000, 0xFFFF);
+  printChar(LAST_COL / 2, LAST_ROW / 2, '/', 0x0000, 0xFFFF);
+  printChar(LAST_COL / 2 - 8, LAST_ROW / 2 + 8, '/', 0x0000, 0xFFFF);
+  timer.start();
+  clearDisplay();
+  }
+  else
+  {
+
+    printChar(LAST_COL / 2 - 8, LAST_ROW / 2, '-', 0x0000, 0xFFFF);
+  printChar(LAST_COL / 2, LAST_ROW / 2, '-', 0x0000, 0xFFFF);
+  printChar(LAST_COL / 2 + 8, LAST_ROW / 2, '-', 0x0000, 0xFFFF);
+  timer.start();
+  clearDisplay();
+  }
+  status = (status + 1);
+  //}
+}
+
+
+void setContrast(String input) {
+  double contrast = input.substring(12,15).toDouble();
+  if(contrast < 0.0 || contrast > 1.0)
+  {
+    Serial.println("Kontrastwert muss zwischen 0 und 1 sein");
+    return;
+  }
+  Serial.print("Constrast: ");
+  Serial.println(contrast);
+  int i = (int) (contrast * 10);
+  bgCol = colArray[i];
+  
+}
+
+
+boolean checkInput(String input) {
+  //help
+   if(input.substring(0,6) == "help()") {
+    Serial.println("Hilfe Modus");
+    help();
+   }
+   //stopDemo
+   else if(input.substring(0,10) == "stopDemo()") {
+    Serial.println("Stoppe Demo");
+    stopDemo();
+   }
+   //clearDisplay
+   else if(input.substring(0,14) == "clearDisplay()") {
+    Serial.println("Aktualisiere das Display");
+    clearDisplay();
+   }
+   //RotatingBarDemo
+   else if(input.substring(0,20) == "runRotatingBarDemo()") {
+    Serial.println("Zeige rotierenden Balken");
+    runRotatingBarDemo();
+   }
+   //StudentDemo
+   else if(input.substring(0,18) == "runStudentIdDemo()") {
+    Serial.println("Student Id");
+    timerStudent();
+   }
+   //Contrast
+   //Bsp: setContrast(1.0), setContrast(0.5) 
+   else if(input.substring(0,12) == "setContrast(") {
+    if(input.substring(13,14) == ",") {
+      Serial.println("Falsches Zahlenformat");
+    }
+    else if(input.length() < 15) {
+      Serial.println("Falscher Parameter"); 
+    }
+    else {
+      Serial.println("Stelle Contrast ein");
+      setContrast(input);
+    }
+   }
+   //Sonst
+   else {
+    Serial.print("Eingabe: ");
+    Serial.println(input);
+    Serial.println("Kein gültiger Befehl");
+   }
+}
+
 
 
 void setup() {
@@ -381,9 +538,14 @@ void setup() {
     SPI.endTransaction();
   time = millis() - time;
   Serial.print("time consumption of clear-display: "); Serial.print(time, DEC); Serial.println(" ms");
+  //initBuffer();
 }
 
 void loop() {
-  runStudentIdDemo();
+  //runStudentIdDemo();
   //printChar();
+  while (Serial.available() > 0) {
+    String input = Serial.readString();
+    checkInput(input);
+    }
 }
