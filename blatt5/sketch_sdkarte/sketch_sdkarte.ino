@@ -309,12 +309,29 @@ void clearDisplay() {
   
 }
 
-void listDirectory() {
+void listDirectory(File dir) {
+  while(true)
+  {
+    File entry = dir.openNextFile();
+    if(!entry)
+    {
+      return;
+    }
+    Serial.println(entry.name());
+    entry.close();
+  }
   
 }
 
-void fileExists() {
-  
+void fileExists(String filename) {
+  if(SD.exists(filename))
+  {
+    Serial.println("File exists");
+  }
+  else
+  {
+    Serial.println("File doesn't exists");
+  }
 }
 
 void toSerial() {
@@ -328,11 +345,23 @@ void toLCD() {
 boolean checkInput(String input) {
    if(input.substring(0,14) == "listDirectory(") {
     Serial.println("Dir: ");
-    listDirectory();
+
+    File dir; 
+    if(!dir = SD.open(input.substring(14, input.length() - 1))
+    {
+      Serial.println("Directory/File couldn't be opened");
+    }
+    else
+    {
+      Serial.println("Entries:");
+      listDirectory(dir); 
+      //WICHTIG: hier wieder schließen?
+    }
+    
    }
    else if(input.substring(0,14) == "doesFileExist(") {
     Serial.println("File Exists?");
-    fileExists();
+    fileExists(input.substring(14, input.length()-1);
    }
    else if(input.substring(0,19) == "outputFileToSerial(") {
     Serial.println("To Serial: ");
@@ -343,9 +372,9 @@ boolean checkInput(String input) {
     toLCD();
    }
    else {
-    Serial.print("Eingabe: ");
+    Serial.print("Input: ");
     Serial.println(input);
-    Serial.println("Kein gültiger Befehl");
+    Serial.println("Not valid");
    }
 }
 
@@ -397,7 +426,12 @@ void setup() {
     SPI.endTransaction();
   time = millis() - time;
   Serial.print("time consumption of clear-display: "); Serial.print(time, DEC); Serial.println(" ms");
-  //initBuffer();
+  
+  //Init sd-card
+  if(!SD.begin(SD_CS))
+  {
+    Serial.println("card not initialised");
+  }
 }
 
 void loop() {
