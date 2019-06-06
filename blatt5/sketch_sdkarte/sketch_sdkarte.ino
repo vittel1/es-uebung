@@ -309,19 +309,6 @@ void clearDisplay() {
   
 }
 
-void listDirectory(File dir) {
-  while(true)
-  {
-    File entry = dir.openNextFile();
-    if(!entry)
-    {
-      return;
-    }
-    Serial.println(entry.name());
-    entry.close();
-  }
-  
-}
 
 void fileExists(String filename) {
   if(SD.exists(filename))
@@ -334,30 +321,58 @@ void fileExists(String filename) {
   }
 }
 
-void toSerial() {
-  
+void toSerial(String filename) {
+  File file = SD.open(filename);
+  if(file)
+  {
+    while(file.available())
+    {
+      Serial.print(file.read());
+    }
+    file.close();
+  }
+  else
+  {
+    Serial.print("error opening ");
+    Serial.println(filename);
+  }
 }
 
 void toLCD() {
   
 }
 
+void listDirectory(String filename) {
+  File dir;
+  if(!dir = SD.open(filename))
+  {
+    Serial.println("Directory/File couldn't be opened");
+  }
+  else
+  {
+    Serial.println("Entries:");
+    while(true)
+    {
+      File entry = dir.openNextFile();
+      if(!entry)
+      {
+        dir.close();
+        return;
+      }
+      Serial.println(entry.name());
+      entry.close();
+    }
+  
+  }
+}
+  
+  
+
+
 boolean checkInput(String input) {
    if(input.substring(0,14) == "listDirectory(") {
     Serial.println("Dir: ");
-
-    File dir; 
-    if(!dir = SD.open(input.substring(14, input.length() - 1))
-    {
-      Serial.println("Directory/File couldn't be opened");
-    }
-    else
-    {
-      Serial.println("Entries:");
-      listDirectory(dir); 
-      //WICHTIG: hier wieder schließen?
-    }
-    
+    listDirectory(input.substring(14, input.length() - 1));     
    }
    else if(input.substring(0,14) == "doesFileExist(") {
     Serial.println("File Exists?");
@@ -365,7 +380,7 @@ boolean checkInput(String input) {
    }
    else if(input.substring(0,19) == "outputFileToSerial(") {
     Serial.println("To Serial: ");
-    toSerial();
+    toSerial(input.substring(19, input.length() - 1));
    }
    else if(input.substring(0,16) == "outputFileToLCD(") {
     Serial.println("To LCD: ");
