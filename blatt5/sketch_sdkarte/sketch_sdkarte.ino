@@ -338,13 +338,34 @@ void toSerial(String filename) {
   }
 }
 
-void toLCD() {
-  
+void toLCD(String filename) {
+  File file = SD.open(filename);
+  if(!file)
+  {
+    Serial.print("error opening ");
+    Serial.println(filename);  
+  }
+  else
+  {
+    if(filename.endsWith(".txt"))
+    {
+      textToLCD(file);
+    }
+    else if(filename.endsWith(".img"))
+    {
+      pictureToLCD(file);
+    }
+    else
+    {
+      Serial.println("Format is not supported");
+    }
+    file.close();
+  }
 }
 
 void listDirectory(String filename) {
-  File dir;
-  if(!dir = SD.open(filename))
+  File dir = SD.open(filename);
+  if(!dir )
   {
     Serial.println("Directory/File couldn't be opened");
   }
@@ -365,10 +386,20 @@ void listDirectory(String filename) {
   
   }
 }
+
+void textToLCD(File file)
+{
   
+}
   
+void pictureToLCD(File file)
+{
+  
+}
 
 
+// && input.endsWith(")")
+//sonst machen Eingaben ohne schließende Klammer alles kaputt
 boolean checkInput(String input) {
    if(input.substring(0,14) == "listDirectory(") {
     Serial.println("Dir: ");
@@ -376,7 +407,7 @@ boolean checkInput(String input) {
    }
    else if(input.substring(0,14) == "doesFileExist(") {
     Serial.println("File Exists?");
-    fileExists(input.substring(14, input.length()-1);
+    fileExists(input.substring(14, input.length()-1));
    }
    else if(input.substring(0,19) == "outputFileToSerial(") {
     Serial.println("To Serial: ");
@@ -384,7 +415,7 @@ boolean checkInput(String input) {
    }
    else if(input.substring(0,16) == "outputFileToLCD(") {
     Serial.println("To LCD: ");
-    toLCD();
+    toLCD(input.substring(16, input.length() - 1));
    }
    else {
     Serial.print("Input: ");
