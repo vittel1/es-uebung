@@ -221,7 +221,8 @@ void setPixel(int x, int y, uint16_t value)
   SPI.endTransaction();
 }
 
-
+//outputFileToSerial(text2.txt)
+//outputFileToLCD(text2.txt)
 void printChar()
 {
   uint16_t mask = 0x01;
@@ -265,12 +266,10 @@ int printChar(int x, int y, char value, uint16_t fgColor, uint16_t bgColor)
       if((font[value - 32][j] & mask) != 0)
       {
         setPixel(xPos, yPos, fgColor);
-        //addToBuffer(xPos, yPos, fgColor);
       }
       else
       {
         setPixel(xPos, yPos, bgColor);
-        //addToBuffer(xPos, yPos, bgColor);
       }
       yPos++;
       mask = mask << 1;
@@ -317,7 +316,7 @@ void fileExists(String filename) {
   }
   else
   {
-    Serial.println("File doesn't exists");
+    Serial.println("File doesn't exist");
   }
 }
 
@@ -327,8 +326,9 @@ void toSerial(String filename) {
   {
     while(file.available())
     {
-      Serial.print(file.read());
+      Serial.print((char)file.read());
     }
+    Serial.println();
     file.close();
   }
   else
@@ -363,11 +363,14 @@ void toLCD(String filename) {
   }
 }
 
-void listDirectory(String filename) {
-  File dir = SD.open(filename);
-  if(!dir )
+//listDirectory(/)
+void listDirectory(String dirName) {
+  Serial.println(dirName);
+  File dir = SD.open(dirName);
+  if(!dir)
   {
     Serial.println("Directory/File couldn't be opened");
+    Serial.println(dir);
   }
   else
   {
@@ -389,12 +392,112 @@ void listDirectory(String filename) {
 
 void textToLCD(File file)
 {
+  if(file.size() > ((LAST_ROW * LAST_COL) / 48))
+  {
+    printString(30, 30, "Fehler",0x0000, 0xFFFF);
+    return;
+  }
+  int counterCol = 0;
+  int counterRow = 0;
+  while(file.available())
+  {
+    char c = file.read();
+    Serial.println(c);
+    if(counterCol +9 >= LAST_COL)
+    {
+      counterCol = 0;
+      counterRow += 8;
+    }
+    printChar(FIRST_COL + counterCol, FIRST_ROW + counterRow, c, 0x0000, 0xFFFF);
+    counterCol += 8;
+  }  
   
 }
   
 void pictureToLCD(File file)
 {
-  
+  String str = "";
+  int col = 0;
+  int row = 0;
+  while(file.available())
+  {
+    char c = file.read();
+    if(c == ',')
+    {
+      col = str.toInt();
+      str = "";
+    }
+    else if(c == '\n')
+    {
+      row = str.toInt();
+      str = "";
+      for(int i = 0; i < row*col*2; i++)
+      {
+        c = file.read();
+        if(c != '\n')
+        {
+         str += c; 
+        }       
+      }
+      readPixels(str, col, row);
+    }
+    else
+    {
+      str += c;
+    }
+    
+  }
+}
+
+//outputFileToLCD(smile1.img)
+void readPixels(String str, int col, int row)
+{
+  Serial.println(col);
+  Serial.println(row);
+  clearDisplay();
+  int currCol = LAST_COL - col/2;
+  int currRow = LAST_ROW - row/2;
+  int cRow = 0;
+  int cCol = 0;
+  for(int i = 0; i < row*col*2; i++)
+  {
+   char c = str.charAt(i);
+   if(c == '1')
+   {
+    setPixel(currCol, currRow, 0x0000); 
+    currCol++;
+    currRow++;
+    cRow++;
+    cCol++;
+    if(cCol > col)
+    {
+      currCol = LAST_COL - col/2;
+      cCol = 0;
+    }
+    if(cRow > row)
+    {
+      currRow = LAST_ROW - row/2;
+      cRow = 0;
+    }
+   }
+   else if(c == '0')
+   {
+    currCol++;
+    currRow++;
+    cRow++;
+    cCol++;
+    if(cCol > col)
+    {
+      currCol = LAST_COL - col/2;
+      cCol = 0;
+    }
+    if(cRow > row)
+    {
+      currRow = LAST_ROW - row/2;
+      cRow = 0;
+    }
+   }
+  }
 }
 
 
@@ -403,19 +506,19 @@ void pictureToLCD(File file)
 boolean checkInput(String input) {
    if(input.substring(0,14) == "listDirectory(") {
     Serial.println("Dir: ");
-    listDirectory(input.substring(14, input.length() - 1));     
-   }
+    listDirectory(input.substring(14, input.length() - 2));     
+   } 
    else if(input.substring(0,14) == "doesFileExist(") {
     Serial.println("File Exists?");
-    fileExists(input.substring(14, input.length()-1));
+    fileExists(input.substring(14, input.length()-2));
    }
    else if(input.substring(0,19) == "outputFileToSerial(") {
     Serial.println("To Serial: ");
-    toSerial(input.substring(19, input.length() - 1));
+    toSerial(input.substring(19, input.length() - 2));
    }
    else if(input.substring(0,16) == "outputFileToLCD(") {
     Serial.println("To LCD: ");
-    toLCD(input.substring(16, input.length() - 1));
+    toLCD(input.substring(16, input.length() - 2));
    }
    else {
     Serial.print("Input: ");
@@ -477,6 +580,10 @@ void setup() {
   if(!SD.begin(SD_CS))
   {
     Serial.println("card not initialised");
+  }
+  else
+  {
+    Serial.println("passt");
   }
 }
 
