@@ -392,6 +392,7 @@ void listDirectory(String dirName) {
 
 void textToLCD(File file)
 {
+  clearDisplay();
   if(file.size() > ((LAST_ROW * LAST_COL) / 48))
   {
     printString(30, 30, "Fehler",0x0000, 0xFFFF);
@@ -434,10 +435,7 @@ void pictureToLCD(File file)
       for(int i = 0; i < row*col*2; i++)
       {
         c = file.read();
-        if(c != '\n')
-        {
-         str += c; 
-        }       
+        str += c;        
       }
       readPixels(str, col, row);
     }
@@ -454,47 +452,35 @@ void readPixels(String str, int col, int row)
 {
   Serial.println(col);
   Serial.println(row);
+  Serial.println(str);
   clearDisplay();
-  int currCol = LAST_COL - col/2;
-  int currRow = LAST_ROW - row/2;
-  int cRow = 0;
-  int cCol = 0;
-  for(int i = 0; i < row*col*2; i++)
+  int currCol = LAST_COL/2 - col/2;
+  int currRow = LAST_ROW/2 - row/2;
+  int cCol = 1;
+  for(int i = 0; i < row*col*2; i+=2)
   {
    char c = str.charAt(i);
    if(c == '1')
    {
     setPixel(currCol, currRow, 0x0000); 
     currCol++;
-    currRow++;
-    cRow++;
     cCol++;
     if(cCol > col)
     {
-      currCol = LAST_COL - col/2;
-      cCol = 0;
-    }
-    if(cRow > row)
-    {
-      currRow = LAST_ROW - row/2;
-      cRow = 0;
+      currCol = (int) (LAST_COL/2 - col/2);
+      cCol = 1;
+      currRow++;
     }
    }
    else if(c == '0')
    {
     currCol++;
-    currRow++;
-    cRow++;
     cCol++;
     if(cCol > col)
     {
-      currCol = LAST_COL - col/2;
-      cCol = 0;
-    }
-    if(cRow > row)
-    {
-      currRow = LAST_ROW - row/2;
-      cRow = 0;
+      currCol = (int) (LAST_COL/2 - col/2);
+      cCol = 1;
+      currRow++;
     }
    }
   }
