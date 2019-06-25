@@ -20,6 +20,11 @@
 Servo upperServo;
 Servo lowerServo;
 DueTimer timer;
+double angleX = 90;
+double angleY = 90;
+int laserState = LOW;
+Bounce debouncerLeft = Bounce();
+Bounce debouncerRight = Bounce();
 
 
 #define TFT_DC_HIGH()           digitalWrite(TFT_DC, HIGH)
@@ -327,6 +332,7 @@ void setup() {
     // set pin-modes
   pinMode(TFT_RST, OUTPUT);
   pinMode(TFT_DC, OUTPUT);
+  pinMode(LASER, OUTPUT);
 
   // initialize serial port 0
   Serial.begin(9600);
@@ -372,6 +378,9 @@ void setup() {
 
   lowerServo.attach(LOWER_SERVO);
   upperServo.attach(UPPER_SERVO);
+  digitalWrite(LASER, laserState);
+  debouncerLeft.attach(T_LEFT, INPUT_PULLUP);
+  debouncerLeft.interval(25);
 }
 
 double bessereMap(double x, double oldMin, double oldMax, double newMin, double newMax)
@@ -379,11 +388,142 @@ double bessereMap(double x, double oldMin, double oldMax, double newMin, double 
   return (((x - oldMin) / (oldMax - oldMin)) * (newMax - newMin) + newMin);
 }
 
+void writeToLowerServo(double volt)
+{
+  //volt = volt*volt;
+  //int val = bessereMap(volt, 0.0, 3.3*3.3, 0, 180);
+  Serial.println(volt);
+  if(volt > 1.5)
+  {
+    if(volt >= 3.1)
+    {
+      if(angleX < 179)
+      {
+        angleX += 1;
+      }
+    }
+    else if(volt > 2.7)
+    {
+      if(angleX < 179)
+      {
+        angleX += 0.5;
+      }
+    }
+    else 
+    {
+      if(angleX < 180)
+      {
+        Serial.println("bin hier");
+        angleX+=0.2;
+      }
+    }
+  }
+  else
+  {
+    if(volt <= 0.2)
+    {
+      if(angleX >= 2)
+      {
+       angleX -= 1;
+      }
+    }
+    else if(volt < 0.9)
+    {
+      if(angleX >= 1)
+      {
+        angleX -= 0.5;
+      }
+    }
+    else
+    {
+      if(angleX >= 1)
+      {
+        angleX-=0.3;
+      }
+    }
+  }
+
+  Serial.println(angleX);
+  lowerServo.write(angleX);
+}
+
+void writeToUpperServo(double volt)
+{
+   Serial.println(volt);
+  if(volt > 1.5)
+  {
+    if(volt >= 3.1)
+    {
+      if(angleY < 179)
+      {
+        angleY += 1;
+      }
+    }
+    else if(volt > 2.7)
+    {
+      if(angleX < 179)
+      {
+        angleX += 0.5;
+      }
+    }
+    else
+    {
+      if(angleY < 180)
+      {
+        Serial.println("bin hier");
+        angleY+= 0.3;
+      }
+    }
+  }
+  else
+  {
+    if(volt <= 0.2)
+    {
+      if(angleY >= 2)
+      {
+       angleY -= 1;
+      }
+    }else if(volt < 0.9)
+    {
+      if(angleX >= 1)
+      {
+        angleX -= 0.5;
+      }
+    }
+    else
+    {
+      if(angleY >= 1)
+      {
+        angleY-= 0.3;
+      }
+    }
+  }
+
+  Serial.println(angleY);
+  upperServo.write(angleY);
+}
+
 void loop() {
+  debouncerLeft.update();
+  if(debouncerLeft.fell())
+  {
+    laserState = !laserState;
+    digitalWrite(LASER, laserState);
+  }
   int valX = analogRead(XOUT);
-  valX = map(valX, 0, 1023, 0, 180);
-  lowerServo.write(valX);
-  delay(15);
+  double voltX = bessereMap(valX, 0, 1023, 0.0, 3.3);
+  if(voltX > 1.7 || voltX < 1.4)
+  {
+    writeToLowerServo(voltX); 
+  }
+  delay(30);
+  int valY = analogRead(YOUT);
+  double voltY = bessereMap(valY, 0, 1023, 0.0, 3.3);
+  if(voltY > 1.7 || voltY < 1.4)
+  {
+    writeToUpperServo(voltY); 
+  }
+  delay(30);
   /*Serial.print("X: ");
   Serial.println(valX);
   double valY = analogRead(YOUT);
